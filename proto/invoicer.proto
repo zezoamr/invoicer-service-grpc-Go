@@ -6,21 +6,52 @@ syntax = "proto3";
 option go_package = "github.com/zezoamr/invoicer-service-grpc-Go/invoicer";
 
 service Invoicer {
-    rpc Create(CreateRequest) returns (CreateResponseNoParmas);
+    rpc SendVoiceMail(CreateRequest)        returns (SendRequestStatus);
+    rpc ReadUnSeenReceived(ReadRequest)     returns (stream multipleinvoice);
+    rpc ReadAllReceived(ReadRequest)        returns (stream multipleinvoice);
+    rpc ReadAllSent(ReadRequest)            returns (stream multipleinvoice);
+    rpc DeleteSeenReceived(DeleteRequest)   returns (DeleteRequestStatus);
+    rpc DeleteAllReceived(DeleteRequest)    returns (DeleteRequestStatus);
 }
 
-message CreateResponseNoParmas{    
+message NoParmas{    
+}
+
+message ReadRequest{
+    int64 userid = 1;  
+    int64 skip = 2;
+    int64 limit = 3;
+}
+
+message DeleteRequest{
+    int64 userid = 1;  
+}
+
+message SendRequestStatus{
+    int32 Status = 1;  
+    int64 messageid = 2;  
+}
+
+message DeleteRequestStatus{
+    int32 Status = 1;  
+    int64 userid = 2;  
 }
 
 message invoice{
-    bytes pdf = 1;
-    bytes docx = 2;
-    bytes audio = 3;
+    bytes audio = 1;
+    repeated string words = 2;
+    bool wordsnotaudio = 3;
+}
+
+
+message multipleinvoice{
+    repeated invoice messages = 1;
 }
 
 message CreateRequest{
-    string from = 1;
-    string to = 2;
+    int64 userfrom = 1;
+    int64 userto = 2;
     invoice message = 3;
+    int64 messageid = 4;
 }
 
