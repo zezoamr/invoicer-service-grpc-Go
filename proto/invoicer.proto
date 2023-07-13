@@ -4,37 +4,63 @@
 
 syntax = "proto3";
 option go_package = "github.com/zezoamr/invoicer-service-grpc-Go/invoicer";
+import "google/protobuf/timestamp.proto";
 
 service Invoicer {
     rpc SendVoiceMail(CreateRequest)        returns (SendRequestStatus);
-    rpc ReadUnSeenReceived(ReadRequest)     returns (stream multipleinvoice);
-    rpc ReadAllReceived(ReadRequest)        returns (stream multipleinvoice);
-    rpc ReadAllSent(ReadRequest)            returns (stream multipleinvoice);
-    rpc DeleteSeenReceived(DeleteRequest)   returns (DeleteRequestStatus);
-    rpc DeleteAllReceived(DeleteRequest)    returns (DeleteRequestStatus);
+    rpc ReadUnSeenReceived(ReadRequest)     returns (multipleinvoiceReply);
+    rpc ReadAllReceived(ReadRequest)        returns (stream invoiceReply);
+    rpc ReadAllSent(ReadRequest)            returns (stream invoiceReply);
+    rpc MarkAsSeen(stream MarkRequest)    returns (stream MarkRequestStatus);
+    rpc ReadMessageTime(stream ReadMessageTimeRequest)        returns (stream ReadMessageTimeResponse);
 }
 
 message NoParmas{    
 }
 
 message ReadRequest{
-    int64 userid = 1;  
-    int64 skip = 2;
-    int64 limit = 3;
+    uint32 userid = 1;  
+    uint32 skip = 2;
+    uint32 limit = 3;
 }
 
 message DeleteRequest{
-    int64 userid = 1;  
+    uint32 userid = 1;  
+}
+
+message CreateRequest{
+    uint32 userfrom = 1;
+    uint32 userto = 2;
+    invoice message = 3;
+}
+
+message MarkRequest{
+    uint32 messageid = 1;  
+}
+
+message ReadMessageTimeRequest{
+    uint32 messageid = 1;  
+}
+
+message ReadMessageTimeResponse{
+    bool Status = 1;  
+    bool Read = 2; 
+    google.protobuf.Timestamp Readtime = 3;
 }
 
 message SendRequestStatus{
-    int32 Status = 1;  
-    int64 messageid = 2;  
+    bool status = 1;  
+    uint32 messageid = 2;  
+}
+
+message MarkRequestStatus{
+    bool status = 1;  
+    uint32 messageid = 2;  
 }
 
 message DeleteRequestStatus{
-    int32 Status = 1;  
-    int64 userid = 2;  
+    bool status = 1;  
+    uint32 userid = 2;  
 }
 
 message invoice{
@@ -43,15 +69,13 @@ message invoice{
     bool wordsnotaudio = 3;
 }
 
-
-message multipleinvoice{
-    repeated invoice messages = 1;
+message invoiceReply{
+    bytes audio = 1;
+    repeated string words = 2;
+    bool wordsnotaudio = 3;
 }
 
-message CreateRequest{
-    int64 userfrom = 1;
-    int64 userto = 2;
-    invoice message = 3;
-    int64 messageid = 4;
-}
 
+message multipleinvoiceReply{
+    repeated invoice invoiceReply = 1;
+}

@@ -27,8 +27,8 @@ const (
 	Invoicer_ReadUnSeenReceived_FullMethodName = "/Invoicer/ReadUnSeenReceived"
 	Invoicer_ReadAllReceived_FullMethodName    = "/Invoicer/ReadAllReceived"
 	Invoicer_ReadAllSent_FullMethodName        = "/Invoicer/ReadAllSent"
-	Invoicer_DeleteSeenReceived_FullMethodName = "/Invoicer/DeleteSeenReceived"
-	Invoicer_DeleteAllReceived_FullMethodName  = "/Invoicer/DeleteAllReceived"
+	Invoicer_MarkAsSeen_FullMethodName         = "/Invoicer/MarkAsSeen"
+	Invoicer_ReadMessageTime_FullMethodName    = "/Invoicer/ReadMessageTime"
 )
 
 // InvoicerClient is the client API for Invoicer service.
@@ -36,11 +36,11 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoicerClient interface {
 	SendVoiceMail(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*SendRequestStatus, error)
-	ReadUnSeenReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadUnSeenReceivedClient, error)
+	ReadUnSeenReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*MultipleinvoiceReply, error)
 	ReadAllReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadAllReceivedClient, error)
 	ReadAllSent(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadAllSentClient, error)
-	DeleteSeenReceived(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteRequestStatus, error)
-	DeleteAllReceived(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteRequestStatus, error)
+	MarkAsSeen(ctx context.Context, opts ...grpc.CallOption) (Invoicer_MarkAsSeenClient, error)
+	ReadMessageTime(ctx context.Context, opts ...grpc.CallOption) (Invoicer_ReadMessageTimeClient, error)
 }
 
 type invoicerClient struct {
@@ -60,40 +60,17 @@ func (c *invoicerClient) SendVoiceMail(ctx context.Context, in *CreateRequest, o
 	return out, nil
 }
 
-func (c *invoicerClient) ReadUnSeenReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadUnSeenReceivedClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[0], Invoicer_ReadUnSeenReceived_FullMethodName, opts...)
+func (c *invoicerClient) ReadUnSeenReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*MultipleinvoiceReply, error) {
+	out := new(MultipleinvoiceReply)
+	err := c.cc.Invoke(ctx, Invoicer_ReadUnSeenReceived_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &invoicerReadUnSeenReceivedClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Invoicer_ReadUnSeenReceivedClient interface {
-	Recv() (*Multipleinvoice, error)
-	grpc.ClientStream
-}
-
-type invoicerReadUnSeenReceivedClient struct {
-	grpc.ClientStream
-}
-
-func (x *invoicerReadUnSeenReceivedClient) Recv() (*Multipleinvoice, error) {
-	m := new(Multipleinvoice)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *invoicerClient) ReadAllReceived(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadAllReceivedClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[1], Invoicer_ReadAllReceived_FullMethodName, opts...)
+	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[0], Invoicer_ReadAllReceived_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +85,7 @@ func (c *invoicerClient) ReadAllReceived(ctx context.Context, in *ReadRequest, o
 }
 
 type Invoicer_ReadAllReceivedClient interface {
-	Recv() (*Multipleinvoice, error)
+	Recv() (*InvoiceReply, error)
 	grpc.ClientStream
 }
 
@@ -116,8 +93,8 @@ type invoicerReadAllReceivedClient struct {
 	grpc.ClientStream
 }
 
-func (x *invoicerReadAllReceivedClient) Recv() (*Multipleinvoice, error) {
-	m := new(Multipleinvoice)
+func (x *invoicerReadAllReceivedClient) Recv() (*InvoiceReply, error) {
+	m := new(InvoiceReply)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -125,7 +102,7 @@ func (x *invoicerReadAllReceivedClient) Recv() (*Multipleinvoice, error) {
 }
 
 func (c *invoicerClient) ReadAllSent(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (Invoicer_ReadAllSentClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[2], Invoicer_ReadAllSent_FullMethodName, opts...)
+	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[1], Invoicer_ReadAllSent_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +117,7 @@ func (c *invoicerClient) ReadAllSent(ctx context.Context, in *ReadRequest, opts 
 }
 
 type Invoicer_ReadAllSentClient interface {
-	Recv() (*Multipleinvoice, error)
+	Recv() (*InvoiceReply, error)
 	grpc.ClientStream
 }
 
@@ -148,30 +125,74 @@ type invoicerReadAllSentClient struct {
 	grpc.ClientStream
 }
 
-func (x *invoicerReadAllSentClient) Recv() (*Multipleinvoice, error) {
-	m := new(Multipleinvoice)
+func (x *invoicerReadAllSentClient) Recv() (*InvoiceReply, error) {
+	m := new(InvoiceReply)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *invoicerClient) DeleteSeenReceived(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteRequestStatus, error) {
-	out := new(DeleteRequestStatus)
-	err := c.cc.Invoke(ctx, Invoicer_DeleteSeenReceived_FullMethodName, in, out, opts...)
+func (c *invoicerClient) MarkAsSeen(ctx context.Context, opts ...grpc.CallOption) (Invoicer_MarkAsSeenClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[2], Invoicer_MarkAsSeen_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &invoicerMarkAsSeenClient{stream}
+	return x, nil
 }
 
-func (c *invoicerClient) DeleteAllReceived(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteRequestStatus, error) {
-	out := new(DeleteRequestStatus)
-	err := c.cc.Invoke(ctx, Invoicer_DeleteAllReceived_FullMethodName, in, out, opts...)
+type Invoicer_MarkAsSeenClient interface {
+	Send(*MarkRequest) error
+	Recv() (*MarkRequestStatus, error)
+	grpc.ClientStream
+}
+
+type invoicerMarkAsSeenClient struct {
+	grpc.ClientStream
+}
+
+func (x *invoicerMarkAsSeenClient) Send(m *MarkRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *invoicerMarkAsSeenClient) Recv() (*MarkRequestStatus, error) {
+	m := new(MarkRequestStatus)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *invoicerClient) ReadMessageTime(ctx context.Context, opts ...grpc.CallOption) (Invoicer_ReadMessageTimeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Invoicer_ServiceDesc.Streams[3], Invoicer_ReadMessageTime_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &invoicerReadMessageTimeClient{stream}
+	return x, nil
+}
+
+type Invoicer_ReadMessageTimeClient interface {
+	Send(*ReadMessageTimeRequest) error
+	Recv() (*ReadMessageTimeResponse, error)
+	grpc.ClientStream
+}
+
+type invoicerReadMessageTimeClient struct {
+	grpc.ClientStream
+}
+
+func (x *invoicerReadMessageTimeClient) Send(m *ReadMessageTimeRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *invoicerReadMessageTimeClient) Recv() (*ReadMessageTimeResponse, error) {
+	m := new(ReadMessageTimeResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // InvoicerServer is the server API for Invoicer service.
@@ -179,11 +200,11 @@ func (c *invoicerClient) DeleteAllReceived(ctx context.Context, in *DeleteReques
 // for forward compatibility
 type InvoicerServer interface {
 	SendVoiceMail(context.Context, *CreateRequest) (*SendRequestStatus, error)
-	ReadUnSeenReceived(*ReadRequest, Invoicer_ReadUnSeenReceivedServer) error
+	ReadUnSeenReceived(context.Context, *ReadRequest) (*MultipleinvoiceReply, error)
 	ReadAllReceived(*ReadRequest, Invoicer_ReadAllReceivedServer) error
 	ReadAllSent(*ReadRequest, Invoicer_ReadAllSentServer) error
-	DeleteSeenReceived(context.Context, *DeleteRequest) (*DeleteRequestStatus, error)
-	DeleteAllReceived(context.Context, *DeleteRequest) (*DeleteRequestStatus, error)
+	MarkAsSeen(Invoicer_MarkAsSeenServer) error
+	ReadMessageTime(Invoicer_ReadMessageTimeServer) error
 	mustEmbedUnimplementedInvoicerServer()
 }
 
@@ -194,8 +215,8 @@ type UnimplementedInvoicerServer struct {
 func (UnimplementedInvoicerServer) SendVoiceMail(context.Context, *CreateRequest) (*SendRequestStatus, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendVoiceMail not implemented")
 }
-func (UnimplementedInvoicerServer) ReadUnSeenReceived(*ReadRequest, Invoicer_ReadUnSeenReceivedServer) error {
-	return status.Errorf(codes.Unimplemented, "method ReadUnSeenReceived not implemented")
+func (UnimplementedInvoicerServer) ReadUnSeenReceived(context.Context, *ReadRequest) (*MultipleinvoiceReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadUnSeenReceived not implemented")
 }
 func (UnimplementedInvoicerServer) ReadAllReceived(*ReadRequest, Invoicer_ReadAllReceivedServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReadAllReceived not implemented")
@@ -203,11 +224,11 @@ func (UnimplementedInvoicerServer) ReadAllReceived(*ReadRequest, Invoicer_ReadAl
 func (UnimplementedInvoicerServer) ReadAllSent(*ReadRequest, Invoicer_ReadAllSentServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReadAllSent not implemented")
 }
-func (UnimplementedInvoicerServer) DeleteSeenReceived(context.Context, *DeleteRequest) (*DeleteRequestStatus, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteSeenReceived not implemented")
+func (UnimplementedInvoicerServer) MarkAsSeen(Invoicer_MarkAsSeenServer) error {
+	return status.Errorf(codes.Unimplemented, "method MarkAsSeen not implemented")
 }
-func (UnimplementedInvoicerServer) DeleteAllReceived(context.Context, *DeleteRequest) (*DeleteRequestStatus, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteAllReceived not implemented")
+func (UnimplementedInvoicerServer) ReadMessageTime(Invoicer_ReadMessageTimeServer) error {
+	return status.Errorf(codes.Unimplemented, "method ReadMessageTime not implemented")
 }
 func (UnimplementedInvoicerServer) mustEmbedUnimplementedInvoicerServer() {}
 
@@ -240,25 +261,22 @@ func _Invoicer_SendVoiceMail_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Invoicer_ReadUnSeenReceived_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ReadRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Invoicer_ReadUnSeenReceived_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(InvoicerServer).ReadUnSeenReceived(m, &invoicerReadUnSeenReceivedServer{stream})
-}
-
-type Invoicer_ReadUnSeenReceivedServer interface {
-	Send(*Multipleinvoice) error
-	grpc.ServerStream
-}
-
-type invoicerReadUnSeenReceivedServer struct {
-	grpc.ServerStream
-}
-
-func (x *invoicerReadUnSeenReceivedServer) Send(m *Multipleinvoice) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(InvoicerServer).ReadUnSeenReceived(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Invoicer_ReadUnSeenReceived_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoicerServer).ReadUnSeenReceived(ctx, req.(*ReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Invoicer_ReadAllReceived_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -270,7 +288,7 @@ func _Invoicer_ReadAllReceived_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type Invoicer_ReadAllReceivedServer interface {
-	Send(*Multipleinvoice) error
+	Send(*InvoiceReply) error
 	grpc.ServerStream
 }
 
@@ -278,7 +296,7 @@ type invoicerReadAllReceivedServer struct {
 	grpc.ServerStream
 }
 
-func (x *invoicerReadAllReceivedServer) Send(m *Multipleinvoice) error {
+func (x *invoicerReadAllReceivedServer) Send(m *InvoiceReply) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -291,7 +309,7 @@ func _Invoicer_ReadAllSent_Handler(srv interface{}, stream grpc.ServerStream) er
 }
 
 type Invoicer_ReadAllSentServer interface {
-	Send(*Multipleinvoice) error
+	Send(*InvoiceReply) error
 	grpc.ServerStream
 }
 
@@ -299,44 +317,60 @@ type invoicerReadAllSentServer struct {
 	grpc.ServerStream
 }
 
-func (x *invoicerReadAllSentServer) Send(m *Multipleinvoice) error {
+func (x *invoicerReadAllSentServer) Send(m *InvoiceReply) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Invoicer_DeleteSeenReceived_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoicerServer).DeleteSeenReceived(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Invoicer_DeleteSeenReceived_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicerServer).DeleteSeenReceived(ctx, req.(*DeleteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+func _Invoicer_MarkAsSeen_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InvoicerServer).MarkAsSeen(&invoicerMarkAsSeenServer{stream})
 }
 
-func _Invoicer_DeleteAllReceived_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteRequest)
-	if err := dec(in); err != nil {
+type Invoicer_MarkAsSeenServer interface {
+	Send(*MarkRequestStatus) error
+	Recv() (*MarkRequest, error)
+	grpc.ServerStream
+}
+
+type invoicerMarkAsSeenServer struct {
+	grpc.ServerStream
+}
+
+func (x *invoicerMarkAsSeenServer) Send(m *MarkRequestStatus) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *invoicerMarkAsSeenServer) Recv() (*MarkRequest, error) {
+	m := new(MarkRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(InvoicerServer).DeleteAllReceived(ctx, in)
+	return m, nil
+}
+
+func _Invoicer_ReadMessageTime_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InvoicerServer).ReadMessageTime(&invoicerReadMessageTimeServer{stream})
+}
+
+type Invoicer_ReadMessageTimeServer interface {
+	Send(*ReadMessageTimeResponse) error
+	Recv() (*ReadMessageTimeRequest, error)
+	grpc.ServerStream
+}
+
+type invoicerReadMessageTimeServer struct {
+	grpc.ServerStream
+}
+
+func (x *invoicerReadMessageTimeServer) Send(m *ReadMessageTimeResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *invoicerReadMessageTimeServer) Recv() (*ReadMessageTimeRequest, error) {
+	m := new(ReadMessageTimeRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Invoicer_DeleteAllReceived_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoicerServer).DeleteAllReceived(ctx, req.(*DeleteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 // Invoicer_ServiceDesc is the grpc.ServiceDesc for Invoicer service.
@@ -351,20 +385,11 @@ var Invoicer_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Invoicer_SendVoiceMail_Handler,
 		},
 		{
-			MethodName: "DeleteSeenReceived",
-			Handler:    _Invoicer_DeleteSeenReceived_Handler,
-		},
-		{
-			MethodName: "DeleteAllReceived",
-			Handler:    _Invoicer_DeleteAllReceived_Handler,
+			MethodName: "ReadUnSeenReceived",
+			Handler:    _Invoicer_ReadUnSeenReceived_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "ReadUnSeenReceived",
-			Handler:       _Invoicer_ReadUnSeenReceived_Handler,
-			ServerStreams: true,
-		},
 		{
 			StreamName:    "ReadAllReceived",
 			Handler:       _Invoicer_ReadAllReceived_Handler,
@@ -374,6 +399,18 @@ var Invoicer_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "ReadAllSent",
 			Handler:       _Invoicer_ReadAllSent_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "MarkAsSeen",
+			Handler:       _Invoicer_MarkAsSeen_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "ReadMessageTime",
+			Handler:       _Invoicer_ReadMessageTime_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "invoicer.proto",
