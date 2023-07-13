@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 
 	"github.com/zezoamr/invoicer-service-grpc-Go/proto/invoicer"
 	"google.golang.org/grpc"
@@ -12,7 +11,6 @@ import (
 func handleError(err error, str string) {
 	if err != nil {
 		log.Fatalf("error has happened %s %v", str, err)
-		os.Exit(1)
 	}
 }
 
