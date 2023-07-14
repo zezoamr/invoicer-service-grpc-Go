@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	db *gorm.DB
+	dbconn *gorm.DB
 )
 
 func handleError(err error, str string) {
