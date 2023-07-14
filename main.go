@@ -6,6 +6,11 @@ import (
 
 	"github.com/zezoamr/invoicer-service-grpc-Go/proto/invoicer"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
+)
+
+var (
+	db *gorm.DB
 )
 
 func handleError(err error, str string) {
