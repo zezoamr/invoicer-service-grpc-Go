@@ -29,20 +29,19 @@ func dbMarkAsSeen(DBConn *gorm.DB, messageid uint) (bool, uint) {
 	return true, messageid
 }
 
-func dbReadMessageTime(DBConn *gorm.DB, messageid uint) (bool, bool, time.time) {
+func dbReadMessageTime(DBConn *gorm.DB, messageid uint) (bool, bool, time.Time) {
 	var invoice Invoice
 
 	result := DBConn.First(&invoice, messageid)
 	handleError(result.Error, "error has happened while processing dbReadMessageTime query")
-    
-	var Read := false
+
+	Read := false
 	if result.RowsAffected == 0 {
 		return false, false, time.Now()
 	}
 	if invoice.CreatedAt != invoice.UpdatedAt {
 		Read = true
 	}
-	
 
 	return true, Read, invoice.UpdatedAt
 }
