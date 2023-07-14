@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	db "github.com/zezoamr/invoicer-service-grpc-Go/db"
 	"github.com/zezoamr/invoicer-service-grpc-Go/proto/invoicer"
 )
 
@@ -11,7 +12,7 @@ type invoicerServer struct {
 }
 
 func (*invoicerServer) SendVoiceMail(ctx context.Context, req *invoicer.CreateRequest) (*invoicer.SendRequestStatus, error) {
-	status, id := dbmSendVoiceMail(db, Invoice{
+	status, id := db.DbSendVoiceMail(dbconn, db.Invoice{
 		Voice:         req.Message.Audio,
 		Words:         req.Message.Words,
 		WordsNotAudio: req.Message.Wordsnotaudio,
