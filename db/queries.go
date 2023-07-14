@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func dbmSendVoiceMail(DBConn *gorm.DB, message Invoice) (bool, uint) {
+func DbSendVoiceMail(DBConn *gorm.DB, message Invoice) (bool, uint) {
 
 	result := DBConn.Create(&message)
 	handleError(result.Error, "error has happened while processing dbmSendVoiceMail query")
@@ -17,7 +17,7 @@ func dbmSendVoiceMail(DBConn *gorm.DB, message Invoice) (bool, uint) {
 	return true, message.ID
 }
 
-func dbMarkAsSeen(DBConn *gorm.DB, messageid uint) (bool, uint) {
+func DbMarkAsSeen(DBConn *gorm.DB, messageid uint) (bool, uint) {
 	var invoice Invoice
 
 	result := DBConn.First(&invoice, messageid)
@@ -29,7 +29,7 @@ func dbMarkAsSeen(DBConn *gorm.DB, messageid uint) (bool, uint) {
 	return true, messageid
 }
 
-func dbReadMessageTime(DBConn *gorm.DB, messageid uint) (bool, bool, time.Time) {
+func DbReadMessageTime(DBConn *gorm.DB, messageid uint) (bool, bool, time.Time) {
 	var invoice Invoice
 
 	result := DBConn.First(&invoice, messageid)
@@ -46,7 +46,7 @@ func dbReadMessageTime(DBConn *gorm.DB, messageid uint) (bool, bool, time.Time) 
 	return true, Read, invoice.UpdatedAt
 }
 
-func dbReadUnSeenReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) []Invoice {
+func DbReadUnSeenReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) []Invoice {
 	var invoices []Invoice
 
 	result := DBConn.Where("ToID = ? and Seen = false", toUserId).Offset(skip).Limit(limit).Find(&invoices)
@@ -55,7 +55,7 @@ func dbReadUnSeenReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) [
 	return invoices
 }
 
-func dbReadAllReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) []Invoice {
+func DbReadAllReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) []Invoice {
 	var invoices []Invoice
 
 	result := DBConn.Where("ToID = ?", toUserId).Offset(skip).Limit(limit).Find(&invoices)
@@ -64,7 +64,7 @@ func dbReadAllReceived(DBConn *gorm.DB, toUserId uint, skip int, limit int) []In
 	return invoices
 }
 
-func dbReadAllSent(DBConn *gorm.DB, fromUserId uint, skip int, limit int) []Invoice {
+func DbReadAllSent(DBConn *gorm.DB, fromUserId uint, skip int, limit int) []Invoice {
 	var invoices []Invoice
 
 	result := DBConn.Where("FromID = ?", fromUserId).Offset(skip).Limit(limit).Find(&invoices)
