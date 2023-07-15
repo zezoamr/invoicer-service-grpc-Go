@@ -73,9 +73,13 @@ message invoiceReply{
     bytes audio = 1;
     repeated string words = 2;
     bool wordsnotaudio = 3;
+    uint32 FromID =4;
+    uint32 ToID =5;
+    bool Seen =6;
+    uint32 ID =7;
 }
 
 
 message multipleinvoiceReply{
-    repeated invoice invoiceReply = 1;
+    repeated invoiceReply invoiceReply = 1;
 }
