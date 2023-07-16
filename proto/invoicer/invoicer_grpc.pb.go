@@ -175,7 +175,7 @@ func (c *invoicerClient) ReadMessageTime(ctx context.Context, opts ...grpc.CallO
 
 type Invoicer_ReadMessageTimeClient interface {
 	Send(*ReadMessageTimeRequest) error
-	Recv() (*ReadMessageTimeResponse, error)
+	CloseAndRecv() (*ReadMessageTimeResponse, error)
 	grpc.ClientStream
 }
 
@@ -187,7 +187,10 @@ func (x *invoicerReadMessageTimeClient) Send(m *ReadMessageTimeRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *invoicerReadMessageTimeClient) Recv() (*ReadMessageTimeResponse, error) {
+func (x *invoicerReadMessageTimeClient) CloseAndRecv() (*ReadMessageTimeResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
 	m := new(ReadMessageTimeResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -352,7 +355,7 @@ func _Invoicer_ReadMessageTime_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type Invoicer_ReadMessageTimeServer interface {
-	Send(*ReadMessageTimeResponse) error
+	SendAndClose(*ReadMessageTimeResponse) error
 	Recv() (*ReadMessageTimeRequest, error)
 	grpc.ServerStream
 }
@@ -361,7 +364,7 @@ type invoicerReadMessageTimeServer struct {
 	grpc.ServerStream
 }
 
-func (x *invoicerReadMessageTimeServer) Send(m *ReadMessageTimeResponse) error {
+func (x *invoicerReadMessageTimeServer) SendAndClose(m *ReadMessageTimeResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -409,7 +412,6 @@ var Invoicer_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ReadMessageTime",
 			Handler:       _Invoicer_ReadMessageTime_Handler,
-			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

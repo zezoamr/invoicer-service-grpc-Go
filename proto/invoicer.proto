@@ -12,7 +12,7 @@ service Invoicer {
     rpc ReadAllReceived(ReadRequest)        returns (stream invoiceReply);
     rpc ReadAllSent(ReadRequest)            returns (stream invoiceReply);
     rpc MarkAsSeen(stream MarkRequest)    returns (stream MarkRequestStatus);
-    rpc ReadMessageTime(stream ReadMessageTimeRequest)        returns (stream ReadMessageTimeResponse);
+    rpc ReadMessageTime(stream ReadMessageTimeRequest)        returns (ReadMessageTimeResponse);
 }
 
 message NoParmas{    
@@ -42,11 +42,16 @@ message ReadMessageTimeRequest{
     uint32 messageid = 1;  
 }
 
-message ReadMessageTimeResponse{
+message ReadMessageTime{
     bool Status = 1;  
     bool Read = 2; 
     google.protobuf.Timestamp Readtime = 3;
 }
+
+message ReadMessageTimeResponse{
+    repeated ReadMessageTime seenArray = 1;  
+}
+
 
 message SendRequestStatus{
     bool status = 1;  
