@@ -97,13 +97,35 @@ func (s *invoicerServer) ReadMessageTime(stream invoicer.Invoicer_ReadMessageTim
 	var messages []*invoicer.ReadMessageTime
 	for {
 		req, err := stream.Recv()
-		status, seen, time := db.DbReadMessageTime(dbconn, uint(req.Messageid))
-		messages = append(messages, &invoicer.ReadMessageTime{Status: status, Read: seen, Readtime: timestamppb.New(time)})
 		if err == io.EOF {
 			return stream.SendAndClose(&invoicer.ReadMessageTimeResponse{SeenArray: messages})
 		}
 		if err != nil {
 			return err
 		}
+
+		status, seen, time := db.DbReadMessageTime(dbconn, uint(req.Messageid))
+		messages = append(messages, &invoicer.ReadMessageTime{Status: status, Read: seen, Readtime: timestamppb.New(time)})
+
 	}
+}
+
+func (s *invoicerServer) MarkAsSeen(stream invoicer.Invoicer_MarkAsSeenServer) error {
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		status, mid := db.DbMarkAsSeen(dbconn, uint(req.Messageid))
+
+		if err := stream.Send(&invoicer.MarkRequestStatus{Status: status, Messageid: uint32(mid)}); err != nil {
+			return err
+		}
+	}
+
 }
