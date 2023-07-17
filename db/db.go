@@ -13,7 +13,7 @@ func handleError(err error, str string) {
 	}
 }
 
-func initDatabase() *gorm.DB {
+func InitDatabase() *gorm.DB {
 	var err error
 	dsn := "host=localhost user=gorm password=gorm dbname=invoicer port=9920 sslmode=disable TimeZone=UTC"
 	DBConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -22,5 +22,4 @@ func initDatabase() *gorm.DB {
 	DBConn.AutoMigrate(&Invoice{})
 
 	return DBConn
-	// don't forget to defer dbconn.close() in main
 }
