@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	db "github.com/zezoamr/invoicer-service-grpc-Go/db"
 	"github.com/zezoamr/invoicer-service-grpc-Go/proto/invoicer"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -27,6 +28,8 @@ func main() {
 
 	serverRegister := grpc.NewServer()
 	service := &invoicerServer{}
+
+	dbconn = db.InitDatabase()
 
 	invoicer.RegisterInvoicerServer(serverRegister, service)
 	err = serverRegister.Serve(lis)
