@@ -20,8 +20,8 @@ message NoParmas{
 
 message ReadRequest{
     uint32 userid = 1;  
-    uint32 skip = 2;
-    uint32 limit = 3;
+    int32 skip = 2;
+    int32 limit = 3;
 }
 
 message DeleteRequest{

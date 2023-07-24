@@ -1,9 +1,8 @@
-package main
+package helperfuncs
 
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -20,7 +19,7 @@ func readAudioFile(filename string) ([]byte, error) {
 	defer file.Close()
 
 	limitedReader := io.LimitReader(file, 1024*1024) // 1MB limit
-	fileBytes, err := ioutil.ReadAll(limitedReader)
+	fileBytes, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return []byte{}, err
 	}
